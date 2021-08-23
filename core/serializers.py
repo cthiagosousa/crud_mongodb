@@ -31,7 +31,7 @@ class AccountSerializer(serializers.ModelSerializer):
         help_text="Indica que este usuário tem todas as permissões sem atribuí-las explicitamente."
     )
 
-    def save(self) -> User:
+    def create(self, validated_data):
         username = self.validated_data['username']
         email = self.validated_data['email']
         password = self.validated_data['password']
@@ -51,3 +51,20 @@ class AccountSerializer(serializers.ModelSerializer):
         )
 
         return account
+    
+    def update(self, instance, validated_data):
+        self.instance.username = self.validated_data['username']
+        self.instance.email = self.validated_data['email']
+        self.instance.is_staff = self.validated_data['is_staff']
+        self.instance.is_superuser = self.validated_data['is_superuser']
+        password = self.validated_data['password']
+        password_confirm = self.validated_data['password_confirm']
+        
+        if password != password_confirm:
+            raise serializers.ValidationError({'error': 'As senhas não são iguais'})
+        
+        self.instance.set_password(password)
+        self.instance.save()
+
+        return self.instance
+
